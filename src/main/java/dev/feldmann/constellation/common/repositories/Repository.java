@@ -1,0 +1,78 @@
+package dev.feldmann.constellation.common.repositories;
+
+import dev.feldmann.constellation.common.Constellation;
+import dev.feldmann.constellation.common.services.Service;
+import dev.feldmann.constellation.common.utils.ObjectLoader;
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.migration.JavaMigration;
+import org.jooq.DSLContext;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+
+public interface Repository extends Service {
+
+    /**
+     * Get the schema for the current repository
+     */
+    public abstract String getSchema();
+
+    /**
+     * If the repository use migrations
+     */
+    boolean useMigrations();
+
+    @Override
+    default void boot() {
+        runMigrations();
+    }
+
+
+    /**
+     * Load the migrations from the repository
+     */
+    default JavaMigration[] loadMigrations() throws IOException, ClassNotFoundException {
+        List<JavaMigration> list = null;
+        list = ObjectLoader.createInstancesFromClasses(this.getClass().getPackage().getName() + ".migrations", JavaMigration.class);
+        return list.toArray(new JavaMigration[0]);
+
+    }
+
+
+    /**
+     * Run the migrations from loadMigrations
+     */
+    default boolean runMigrations() {
+        if (!useMigrations()) return true;
+        JavaMigration[] javaMigrations = new JavaMigration[0];
+        try {
+            javaMigrations = loadMigrations();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+        Flyway flyway = Flyway.configure()
+                .dataSource(Constellation.getInstance().getDatabase().getDataSource(getSchema()))
+                .javaMigrations(javaMigrations)
+                .load();
+        flyway.migrate();
+        return true;
+    }
+
+    /**
+     * @return The connection with the current schema
+     */
+    default Connection getConnection() throws SQLException {
+        return Constellation.getInstance().getDatabase().getConnection(getSchema());
+    }
+
+    /**
+     * @return DSLContext the DSLContext pre configured with the given schema and connection pool
+     */
+    default DSLContext ctx() {
+        return Constellation.getInstance().getDatabase().getCtx(getSchema());
+    }
+
+}
