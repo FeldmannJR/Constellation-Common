@@ -13,6 +13,6 @@ public class DatabaseConfig {
     private String password = Env.get("DATABASE_PASSWORD", "senha123");
     private String host = Env.get("DATABASE_HOST", "localhost");
     private String port = Env.get("DATABASE_PORT", "3306");
-    private String defaultSchema = Env.get("DATABASE_SCHEMA", "common");
+    private String defaultSchema = Env.get("DATABASE_SCHEMA", "constellation_common");
     private SQLDialect dialect = SQLDialect.MARIADB;
 }
