@@ -10,16 +10,35 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
+    
+    <profiles>
+        <profile>
+            <id>development</id>
+            <properties>
+                <config.repositoryBaseURL>http://nexus.minikube</config.repositoryBaseURL>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>production</id>
+            <properties>
+                <config.repositoryBaseURL>http://nexus.default.cluster.local</config.repositoryBaseURL>
+            </properties>
+        </profile>
+    </profiles>
+
     <distributionManagement>
         <snapshotRepository>
             <id>constellation-snapshots</id>
-            <url>http://nexus.minikube/repository/maven-snapshots/</url>
+            <url>${config.repositoryBaseURL}/repository/maven-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
     <repositories>
         <repository>
             <id>constellation-repo</id>
-            <url>http://nexus.minikube/repository/maven-public/</url>
+            <url>${config.repositoryBaseURL}/repository/maven-public/</url>
         </repository>
     </repositories>
     <dependencies>
@@ -27,13 +46,11 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>1.18.10</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.11</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
