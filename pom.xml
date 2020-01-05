@@ -24,7 +24,7 @@
         <profile>
             <id>production</id>
             <properties>
-                <config.repositoryBaseURL>http://nexus.default.cluster.local</config.repositoryBaseURL>
+                <config.repositoryBaseURL>http://nexus.default.svc.cluster.local</config.repositoryBaseURL>
             </properties>
         </profile>
     </profiles>
