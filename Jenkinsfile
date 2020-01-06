@@ -25,9 +25,7 @@ pipeline {
     stages {
         stage('Deploy') {
             steps {
-                container(name: 'maven') {
-                    sh 'mvn clean deploy -P production'
-                }
+                sh 'mvn clean deploy -P production'
             }
         }
     }
