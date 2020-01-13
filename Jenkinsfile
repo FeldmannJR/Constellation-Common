@@ -8,8 +8,10 @@ pipeline {
     }
     stages {
         stage('Deploy') {
-            steps {
-                sh 'mvn clean deploy -P production'
+            withMaven(){
+                steps {
+                    sh './mvnw clean deploy -P production'
+                }
             }
         }
     }
