@@ -10,7 +10,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 withMaven(){
-                    sh 'export PATH=$MVN_CMD_DIR:$PATH && ./mvnw clean deploy -P production'
+                    sh 'export PATH=$MVN_CMD_DIR:$PATH && mvn clean deploy -P production'
                 }
             }
         }
