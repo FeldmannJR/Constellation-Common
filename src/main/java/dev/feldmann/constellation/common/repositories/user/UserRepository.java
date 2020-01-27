@@ -4,6 +4,7 @@ import static dev.feldmann.constellation.common.database.jooq.Tables.*;
 
 import dev.feldmann.constellation.common.database.jooq.tables.records.UsersRecord;
 import dev.feldmann.constellation.common.repositories.Repository;
+import dev.feldmann.constellation.common.services.Inject;
 import dev.feldmann.constellation.common.services.ServiceStatus;
 import lombok.Getter;
 import lombok.NonNull;
@@ -12,6 +13,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class UserRepository extends Repository {
+
+
+    @Inject
+    TestService testService;
 
     @Override
     public String getSchema() {
@@ -23,6 +28,10 @@ public class UserRepository extends Repository {
         return true;
     }
 
+
+    public void testing(){
+        testService.test();
+    }
     /**
      * Load Player by UUID
      *

@@ -2,6 +2,7 @@ package dev.feldmann.constellation.common.repositories;
 
 import dev.feldmann.constellation.common.Constellation;
 import dev.feldmann.constellation.common.services.Service;
+import dev.feldmann.constellation.common.services.ServiceProvider;
 import dev.feldmann.constellation.common.services.ServiceStatus;
 import dev.feldmann.constellation.common.utils.ObjectLoader;
 import lombok.Getter;
@@ -19,27 +20,27 @@ public abstract class Repository implements Service {
     private ServiceStatus status = ServiceStatus.DISABLED;
 
     @Override
-    public void boot() {
+    public void boot(ServiceProvider provider) {
         runMigrations();
     }
 
     @Override
-    public void start() {
+    public void start(ServiceProvider provider) {
 
     }
 
     @Override
-    public void stop() {
+    public void stop(ServiceProvider provider) {
 
     }
 
     @Override
-    public void afterStop() {
+    public void postStop(ServiceProvider provider) {
 
     }
 
     @Override
-    public void setStatus(ServiceStatus status) {
+    public void updateStatus(ServiceStatus status) {
         this.status = status;
     }
 

@@ -4,28 +4,29 @@ public interface Service {
     /**
      * Called first on life-cycle, maybe all repositories has not been booted
      */
-    public void boot();
+    public void boot(ServiceProvider provider);
 
     /**
      * Called after all repositories have been booted
      */
-    public void start();
+    public void start(ServiceProvider provider);
 
     /**
      * Called first on life-cycle, maybe all repositories has not been booted
      */
-    public void stop();
+    public void stop(ServiceProvider provider);
 
     /**
      * Called first on life-cycle, maybe all repositories has not been booted
      */
-    public void afterStop();
+    public void postStop(ServiceProvider provider);
 
     /**
      * Set the status for this service, this is called from the service provider
      *
      * @param status Current status
      */
-    public void setStatus(ServiceStatus status);
+    public void updateStatus(ServiceStatus status);
+
 
 }
