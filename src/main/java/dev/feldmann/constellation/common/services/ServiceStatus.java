@@ -7,5 +7,6 @@ public enum ServiceStatus {
     RUNNING,
     STOPPING,
     POST_STOPPING,
-    STOPPED
+    STOPPED,
+    FAILED
 }

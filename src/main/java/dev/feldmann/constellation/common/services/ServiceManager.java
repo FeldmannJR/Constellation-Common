@@ -6,6 +6,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.security.Provider;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class ServiceManager {
@@ -44,6 +45,19 @@ public class ServiceManager {
         return false;
     }
 
+
+    public <T extends Service> List<ServiceHolder<T>> getServicesOfType(Class<T> type) {
+        List<ServiceHolder<T>> services = new ArrayList<>();
+        for (ServiceProvider provider : providers) {
+            Collection<ServiceHolder<? extends Service>> values = provider.getServices().values();
+            for (ServiceHolder<? extends Service> serviceHolder : values) {
+                if(type.isAssignableFrom(serviceHolder.getService().getClass())){
+                    services.add((ServiceHolder<T>) serviceHolder);
+                }
+            }
+        }
+        return services;
+    }
 
     public <T extends Service> T getService(Class<T> serviceClass) {
         ServiceHolder<T> holder = getServiceHolder(serviceClass);

@@ -1,5 +1,7 @@
 package dev.feldmann.constellation.common.services;
 
+import dev.feldmann.constellation.common.services.exceptions.ServiceException;
+
 public interface Service {
     /**
      * Called first on life-cycle, maybe all repositories has not been booted

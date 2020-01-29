@@ -1,16 +1,20 @@
 package dev.feldmann.constellation.common.services;
 
+import dev.feldmann.constellation.common.services.exceptions.InjectDependenciesException;
+import dev.feldmann.constellation.common.services.exceptions.ServiceEnableException;
+import dev.feldmann.constellation.common.services.exceptions.ServiceException;
+import dev.feldmann.constellation.common.services.exceptions.ServiceNotFoundException;
 import lombok.Getter;
 import lombok.NonNull;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Consumer;
 
 
 public class ServiceProvider {
 
     @NonNull
+    @Getter
     private ServiceManager manager;
     @Getter
     @NonNull
@@ -69,9 +73,9 @@ public class ServiceProvider {
     }
 
 
-    private <T extends Service> void forEachService(ServiceHolder<T> serviceHolder, ServiceStatus status, Consumer<ServiceHolder<? extends Service>> action) throws ServiceNotFoundException {
-        // If the service already is in the given state just ignore
-        if (serviceHolder.getStatus() == status) {
+    private <T extends Service> void addServicesToListByDependency(ServiceHolder<T> serviceHolder, List<ServiceHolder<? extends Service>> toAddList) throws ServiceNotFoundException {
+        // If the service already in the load list just ignore
+        if (toAddList.contains(serviceHolder)) {
             return;
         }
         T service = serviceHolder.getService();
@@ -84,80 +88,95 @@ public class ServiceProvider {
             Inject inject = dependencies.get(dependency);
             ServiceHolder<? extends Service> dependencyService = getServiceHolder(dependency, inject.external());
             if (dependencyService == null && inject.required()) {
-                throw new ServiceNotFoundException("Cannot find service " + dependency.getName());
+                throw new ServiceNotFoundException(null, service, dependency);
             }
             if (dependencyService != null)
-                forEachService(dependencyService, status, action);
+                addServicesToListByDependency(dependencyService, toAddList);
         }
-        serviceHolder.setStatus(status);
-        action.accept(serviceHolder);
+        toAddList.add(serviceHolder);
     }
 
+    private List<ServiceHolder<? extends Service>> getServicesOrderedByDependency() throws ServiceNotFoundException {
+        List<ServiceHolder<? extends Service>> list = new ArrayList<>();
+        for (ServiceHolder<? extends Service> serviceIt : this.services.values()) {
+            addServicesToListByDependency(serviceIt, list);
+        }
+        return list;
+    }
 
-    private void boot() throws ServiceNotFoundException {
+    private void boot() throws ServiceException {
         this.status = ServiceStatus.BOOTING;
-        for (ServiceHolder<? extends Service> serviceIt : this.services.values()) {
-            forEachService(serviceIt, ServiceStatus.BOOTING, serviceHolder -> {
-                Service service = serviceHolder.getService();
-                try {
-                    ServiceDependencyInjector.injectServices(service, this);
-                } catch (InjectDependenciesException e) {
-                    e.printStackTrace();
-                }
-                long start = System.currentTimeMillis();
+        for (ServiceHolder<? extends Service> serviceHolder : getServicesOrderedByDependency()) {
+            Service service = serviceHolder.getService();
+            try {
+                ServiceDependencyInjector.injectServices(service, this);
+            } catch (InjectDependenciesException e) {
+                e.printStackTrace();
+            }
+            long start = System.currentTimeMillis();
+            serviceHolder.setStatus(ServiceStatus.BOOTING);
+            try {
                 service.boot(this);
-                serviceHolder.setBootTime(System.currentTimeMillis() - start);
-            });
+            } catch (Exception ex) {
+                this.status = ServiceStatus.FAILED;
+                serviceHolder.setStatus(ServiceStatus.FAILED);
+                throw new ServiceEnableException(ex, service, ServiceStatus.BOOTING);
+            }
+            serviceHolder.setBootDuration(System.currentTimeMillis() - start);
         }
     }
 
-    private void start() throws ServiceNotFoundException {
+    private void start() throws ServiceException {
         this.status = ServiceStatus.STARTING;
-        for (ServiceHolder<? extends Service> serviceIt : this.services.values()) {
-            forEachService(serviceIt, ServiceStatus.STARTING, serviceHolder -> {
-                Service service = serviceHolder.getService();
-                long start = System.currentTimeMillis();
+        for (ServiceHolder<? extends Service> serviceHolder : getServicesOrderedByDependency()) {
+            Service service = serviceHolder.getService();
+            long start = System.currentTimeMillis();
+            serviceHolder.setStatus(ServiceStatus.STARTING);
+            try {
                 service.start(this);
-                serviceHolder.setStatus(ServiceStatus.RUNNING);
-                serviceHolder.setStartTime(System.currentTimeMillis() - start);
-            });
+            } catch (Exception ex) {
+                this.status = ServiceStatus.FAILED;
+                serviceHolder.setStatus(ServiceStatus.FAILED);
+                throw new ServiceEnableException(ex, service, ServiceStatus.STARTING);
+            }
+            serviceHolder.setStatus(ServiceStatus.RUNNING);
+            serviceHolder.setStartDuration(System.currentTimeMillis() - start);
         }
     }
 
 
-    private void stop() throws ServiceNotFoundException {
+    private void stop() throws ServiceException {
         this.status = ServiceStatus.STOPPING;
-        for (ServiceHolder<? extends Service> serviceIt : this.services.values()) {
-            forEachService(serviceIt, ServiceStatus.STOPPING, serviceHolder -> {
-                Service service = serviceHolder.getService();
-                long start = System.currentTimeMillis();
-                service.stop(this);
-                serviceHolder.setStopTime(System.currentTimeMillis() - start);
-            });
+        for (ServiceHolder<? extends Service> serviceHolder : getServicesOrderedByDependency()) {
+            Service service = serviceHolder.getService();
+            long start = System.currentTimeMillis();
+            serviceHolder.setStatus(ServiceStatus.STOPPING);
+            service.stop(this);
+            serviceHolder.setStopDuration(System.currentTimeMillis() - start);
         }
     }
 
-    private void postStop() throws ServiceNotFoundException {
+    private void postStop() throws ServiceException {
         this.status = ServiceStatus.POST_STOPPING;
-        for (ServiceHolder<? extends Service> serviceIt : this.services.values()) {
-            forEachService(serviceIt, ServiceStatus.POST_STOPPING, serviceHolder -> {
-                Service service = serviceHolder.getService();
-                service.postStop(this);
-                long start = System.currentTimeMillis();
-                serviceHolder.setPostStopTime(System.currentTimeMillis() - start);
-                serviceHolder.setStatus(ServiceStatus.STOPPED);
-            });
+        for (ServiceHolder<? extends Service> serviceHolder : getServicesOrderedByDependency()) {
+            Service service = serviceHolder.getService();
+            long start = System.currentTimeMillis();
+            serviceHolder.setStatus(ServiceStatus.POST_STOPPING);
+            service.postStop(this);
+            serviceHolder.setPostStopDuration(System.currentTimeMillis() - start);
+            serviceHolder.setStatus(ServiceStatus.STOPPED);
         }
+        this.status = ServiceStatus.STOPPED;
     }
 
-    public void enable() throws ServiceNotFoundException {
+    public void enable() throws ServiceException {
         if (this.status == ServiceStatus.DISABLED) {
             boot();
             start();
         }
     }
 
-    public void disable() throws ServiceNotFoundException {
+    public void disable() throws ServiceException {
         if (this.status == ServiceStatus.RUNNING) {
             stop();
             postStop();

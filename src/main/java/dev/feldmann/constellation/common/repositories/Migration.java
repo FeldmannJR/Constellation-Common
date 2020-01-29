@@ -1,5 +1,6 @@
 package dev.feldmann.constellation.common.repositories;
 
+import org.flywaydb.core.api.MigrationVersion;
 import org.flywaydb.core.api.migration.BaseJavaMigration;
 import org.flywaydb.core.api.migration.Context;
 import org.jooq.DSLContext;

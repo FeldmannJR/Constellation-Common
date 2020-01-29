@@ -17,20 +17,19 @@ public class ServiceHolder<T extends Service> {
 
     @Setter
     @Getter
-    private long bootTime = -1;
+    private long bootDuration = -1;
 
     @Setter
     @Getter
-    private long startTime = -1;
+    private long startDuration = -1;
 
     @Setter
     @Getter
-    private long stopTime = -1;
+    private long stopDuration = -1;
 
     @Setter
     @Getter
-    private long postStopTime = -1;
-
+    private long postStopDuration = -1;
 
 
     public ServiceHolder(@NonNull T service, @NonNull ServiceStatus status) {
@@ -38,7 +37,7 @@ public class ServiceHolder<T extends Service> {
         this.status = status;
     }
 
-     void setStatus(ServiceStatus status) {
+    void setStatus(ServiceStatus status) {
         this.status = status;
         this.service.updateStatus(status);
     }

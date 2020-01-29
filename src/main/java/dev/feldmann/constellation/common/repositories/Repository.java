@@ -1,11 +1,14 @@
 package dev.feldmann.constellation.common.repositories;
 
 import dev.feldmann.constellation.common.Constellation;
+import dev.feldmann.constellation.common.repositories.exceptions.DuplicateRepositoryName;
 import dev.feldmann.constellation.common.services.Service;
+import dev.feldmann.constellation.common.services.ServiceHolder;
 import dev.feldmann.constellation.common.services.ServiceProvider;
 import dev.feldmann.constellation.common.services.ServiceStatus;
 import dev.feldmann.constellation.common.utils.ObjectLoader;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.migration.JavaMigration;
 import org.jooq.DSLContext;
@@ -19,8 +22,10 @@ public abstract class Repository implements Service {
     @Getter
     private ServiceStatus status = ServiceStatus.DISABLED;
 
+    @SneakyThrows
     @Override
     public void boot(ServiceProvider provider) {
+        checkForUniqueRepositoryName(provider);
         runMigrations();
     }
 
@@ -58,21 +63,30 @@ public abstract class Repository implements Service {
     /**
      * Run the migrations from loadMigrations
      */
-    private boolean runMigrations() {
-        if (!useMigrations()) return true;
+    private void runMigrations() throws IOException, ClassNotFoundException {
+        if (!useMigrations()) return;
         JavaMigration[] javaMigrations = new JavaMigration[0];
-        try {
-            javaMigrations = loadMigrations();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return false;
-        }
+        javaMigrations = loadMigrations();
         Flyway flyway = Flyway.configure()
                 .dataSource(Constellation.getInstance().getDatabase().getDataSource(getSchema()))
                 .javaMigrations(javaMigrations)
+                // Using one table per repository, because its possible to have a infinite amount of repositories
+                // and flyway doesn't support two migration timelines in the same table
+                .table("flyway_migrations_" + getRepositoryName().toLowerCase())
+                // TODO Add which server ran the migration, but first is needed to define the server id
+                // .installedBy("root")
                 .load();
         flyway.migrate();
-        return true;
+    }
+
+    private void checkForUniqueRepositoryName(ServiceProvider provider) {
+        List<ServiceHolder<Repository>> repositories = provider.getManager().getServicesOfType(Repository.class);
+        for (ServiceHolder<Repository> repository : repositories) {
+            String name = repository.getService().getRepositoryName();
+            if (repository.getService() != this && name.equalsIgnoreCase(this.getRepositoryName())) {
+                throw new DuplicateRepositoryName(this);
+            }
+        }
     }
 
     /**
@@ -93,6 +107,12 @@ public abstract class Repository implements Service {
      * Get the schema for the current repository
      */
     protected abstract String getSchema();
+
+    /**
+     * The repository name to create the migration tables
+     * Needs to be unique across schemas
+     */
+    protected abstract String getRepositoryName();
 
     /**
      * If the repository use migrations

@@ -22,3 +22,6 @@ To be decided
 #### Message Broker
 To be decided
 
+
+### How to generate models jOOQ
+``mvn ``

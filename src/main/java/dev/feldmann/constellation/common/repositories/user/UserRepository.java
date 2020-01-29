@@ -24,14 +24,20 @@ public class UserRepository extends Repository {
     }
 
     @Override
+    protected String getRepositoryName() {
+        return "users";
+    }
+
+    @Override
     public boolean useMigrations() {
         return true;
     }
 
 
-    public void testing(){
+    public void testing() {
         testService.test();
     }
+
     /**
      * Load Player by UUID
      *

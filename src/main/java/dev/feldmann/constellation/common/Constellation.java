@@ -5,7 +5,9 @@ import dev.feldmann.constellation.common.config.Config;
 import dev.feldmann.constellation.common.repositories.user.TestService;
 import dev.feldmann.constellation.common.repositories.user.UserRepository;
 import dev.feldmann.constellation.common.services.ServiceManager;
-import dev.feldmann.constellation.common.services.ServiceNotFoundException;
+import dev.feldmann.constellation.common.services.exceptions.ServiceEnableException;
+import dev.feldmann.constellation.common.services.exceptions.ServiceException;
+import dev.feldmann.constellation.common.services.exceptions.ServiceNotFoundException;
 import dev.feldmann.constellation.common.services.ServiceProvider;
 import lombok.Getter;
 
@@ -33,29 +35,45 @@ public class Constellation {
         this.config = new Config();
         this.serviceManager = new ServiceManager();
         this.database = new Database(config.getDatabase());
+
+    }
+
+    public void enable() {
+        info("Enabling");
         try {
             registerProviders();
-        } catch (ServiceNotFoundException e) {
+        } catch (ServiceException e) {
+            if (e instanceof ServiceEnableException) {
+                //TODO shutdown the server
+            }
             e.printStackTrace();
+            System.exit(1);
         }
     }
 
-    private void registerProviders() throws ServiceNotFoundException {
+    public void disable() {
+        info("Disabling");
+        try {
+            commonServiceProvider.disable();
+            serviceManager.removeProvider(commonServiceProvider);
+        } catch (ServiceException e) {
+            e.printStackTrace();
+        }
+        commonServiceProvider = null;
+        serviceManager = null;
+    }
+
+    private void registerProviders() throws ServiceException {
         commonServiceProvider = serviceManager.createProvider();
         commonServiceProvider.registerService(UserRepository.class, new UserRepository());
         commonServiceProvider.registerService(TestService.class, new TestService());
         commonServiceProvider.enable();
     }
 
-    public void disable() {
-        try {
-            commonServiceProvider.disable();
-            serviceManager.removeProvider(commonServiceProvider);
-        } catch (ServiceNotFoundException e) {
-            e.printStackTrace();
-        }
-        commonServiceProvider = null;
-        serviceManager = null;
+
+    public void info(String info) {
+        //TODO Proper logging
+        System.out.println("[Constellation-Common] " + info);
     }
 
 }
