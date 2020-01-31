@@ -6,4 +6,8 @@ public class Config {
     @Getter
     private DatabaseConfig database = new DatabaseConfig();
 
+    public void load() {
+        database.load();
+    }
+
 }

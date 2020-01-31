@@ -32,14 +32,15 @@ public class Constellation {
 
     public Constellation() {
         instance = this;
-        this.config = new Config();
-        this.serviceManager = new ServiceManager();
-        this.database = new Database(config.getDatabase());
-
     }
 
     public void enable() {
         info("Enabling");
+        this.config = new Config();
+        info("Loading config");
+        config.load();
+        this.serviceManager = new ServiceManager();
+        this.database = new Database(config.getDatabase());
         try {
             registerProviders();
         } catch (ServiceException e) {

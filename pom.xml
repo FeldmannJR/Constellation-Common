@@ -1,18 +1,38 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>dev.feldmann.constellation</groupId>
-    <artifactId>common</artifactId>
-    <version>1.0-SNAPSHOT</version>
     <parent>
         <groupId>dev.feldmann.constellation</groupId>
         <artifactId>parent-pom</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
+
+    <groupId>dev.feldmann.constellation</groupId>
+    <artifactId>common</artifactId>
+    <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
+
+    <name>Constellation Common</name>
+    <description>Common Java Functions of the Constellation Project</description>
+
     <properties>
         <jooq.version>3.12.3</jooq.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <scm>
+        <connection>scm:git:git://github.com:FeldmannJR/constellation-common.git</connection>
+        <developerConnection>scm:git:git://github.com:FeldmannJR/constellation-common.git</developerConnection>
+        <url>https://github.com/FeldmannJR/constellation-common</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <name>Carlos André Feldmann Júnior</name>
+            <email>feldmannjunior@gmail.com</email>
+        </developer>
+    </developers>
+
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -28,6 +48,11 @@
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>3.4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.feldmann</groupId>
+            <artifactId>jooq-config-discovery-maven-plugin</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.jooq</groupId>
@@ -49,7 +74,18 @@
             <artifactId>flyway-core</artifactId>
             <version>6.1.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>RELEASE</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.10.19</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

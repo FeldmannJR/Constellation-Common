@@ -1,6 +1,6 @@
 package dev.feldmann.constellation.common.repositories.user;
 
-import dev.feldmann.constellation.common.database.jooq.tables.records.UsersRecord;
+//import dev.feldmann.constellation.common.database.jooq.tables.records.UsersRecord;
 import lombok.Getter;
 
 public class User {
@@ -12,4 +12,6 @@ public class User {
         this.record = record;
     }
 
+    private class UsersRecord {
+    }
 }

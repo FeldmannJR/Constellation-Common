@@ -24,4 +24,5 @@ To be decided
 
 
 ### How to generate models jOOQ
-``mvn ``
+Using https://github.com/FeldmannJR/jooq-config-discovery  
+``mvn dev.feldmann:jooq-config-discovery-maven-plugin:generate``

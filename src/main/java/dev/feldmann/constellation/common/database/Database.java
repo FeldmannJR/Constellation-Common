@@ -61,7 +61,7 @@ public class Database {
     private HikariDataSource createDataSource(String schema) {
         HikariConfig hikariConfig = new HikariConfig();
 
-        hikariConfig.setJdbcUrl("jdbc:mysql://" + config.getHost() + ":" + config.getPort() + "/" + schema+"?useSSL=false");
+        hikariConfig.setJdbcUrl(config.buildURL(schema));
         hikariConfig.setUsername(config.getUsername());
         hikariConfig.setPassword(config.getPassword());
         hikariConfig.addDataSourceProperty("cachePrepStmts", "true");
